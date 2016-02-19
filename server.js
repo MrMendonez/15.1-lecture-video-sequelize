@@ -51,11 +51,11 @@ app.post('/register', function(req, res) {
   var password = req.body.password;
 
   User.create(req.body).then(function(result) {
-    console.log(user);
-    req.session.authenticated = user;
+    console.log(user.value);
+    req.session.authenticated = user.value;
     res.redirect('/success');
   }).catch(function(err) {
-    throw err;
+    res.redirect('/?msg=' + err.message)
   });
 
   // var checkQuery = "SELECT * FROM users WHERE email="+connection.escape(email);
