@@ -47,27 +47,38 @@ app.post('/register', function(req, res) {
   var email = req.body.email;
   var password = req.body.password;
 
-  var checkQuery = "SELECT * FROM users WHERE email="+connection.escape(email);
-  var insertQuery = "INSERT INTO users (email, password) VALUES (?, ?)";
+  User.create({
+    email: email,
+    password: password
+  }).then(function(result) {
+    console.log(user);
+    req.session.authenticated = true;
+    res.redirect('/success');
+  }).catch(function(err) {
+    throw err;
+  });
 
-  connection.query(checkQuery, function(err, results) {
-    if(err) {
-      throw err;
-    }
+  // var checkQuery = "SELECT * FROM users WHERE email="+connection.escape(email);
+  // var insertQuery = "INSERT INTO users (email, password) VALUES (?, ?)";
 
-    if(results.length > 0) {
-      res.redirect('/?msg=Already exists');
-    }
-    else {
-      connection.query(insertQuery, [email, password], function(err) {
-        if(err) {
-          throw err;
-        }
-        req.session.authenticated = true;
-        res.redirect('/success');
-      });
-    }
-  })
+  // connection.query(checkQuery, function(err, results) {
+  //   if(err) {
+  //     throw err;
+  //   }
+
+  //   if(results.length > 0) {
+  //     res.redirect('/?msg=Already exists');
+  //   }
+  //   else {
+  //     connection.query(insertQuery, [email, password], function(err) {
+  //       if(err) {
+  //         throw err;
+  //       }
+  //       req.session.authenticated = true;
+  //       res.redirect('/success');
+  //     });
+  //   }
+  // })
 });
 
 app.post('/login', function(req, res) {
@@ -80,6 +91,7 @@ app.post('/login', function(req, res) {
       password: password
     }
   }).then(function(user) {
+    console.log(user);
     if(user) {
       req.session.authenticated = true;
       res.redirect('/success');
