@@ -51,34 +51,11 @@ app.post('/register', function(req, res) {
   var password = req.body.password;
 
   User.create(req.body).then(function(result) {
-    console.log(user.value);
-    req.session.authenticated = user.value;
+    req.session.authenticated = user;
     res.redirect('/success');
   }).catch(function(err) {
     res.redirect('/?msg=' + err.message)
   });
-
-  // var checkQuery = "SELECT * FROM users WHERE email="+connection.escape(email);
-  // var insertQuery = "INSERT INTO users (email, password) VALUES (?, ?)";
-
-  // connection.query(checkQuery, function(err, results) {
-  //   if(err) {
-  //     throw err;
-  //   }
-
-  //   if(results.length > 0) {
-  //     res.redirect('/?msg=Already exists');
-  //   }
-  //   else {
-  //     connection.query(insertQuery, [email, password], function(err) {
-  //       if(err) {
-  //         throw err;
-  //       }
-  //       req.session.authenticated = true;
-  //       res.redirect('/success');
-  //     });
-  //   }
-  // })
 });
 
 app.post('/login', function(req, res) {
@@ -93,7 +70,7 @@ app.post('/login', function(req, res) {
   }).then(function(user) {
     console.log(user);
     if(user) {
-      req.session.authenticated = true;
+      req.session.authenticated = user;
       res.redirect('/success');
     }
     else {
@@ -105,13 +82,13 @@ app.post('/login', function(req, res) {
 }); // end app.post /login
 
 app.get('/success', function(req, res, next) {
-  if(req.session.authenticated === true) {
+  if(req.session.authenticated) {
     next();
   }
   else {
     res.redirect("/?msg=Must be authed");
   }
-  res.send('You got it!');
+  res.send('Welcome ' + req.session.authenticated.firstname + ' ' + req.session.authenticated.lastname);
 });
 
 sequelize.sync().then(function() {
