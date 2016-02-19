@@ -37,13 +37,26 @@ app.post('/register', function(req, res) {
   var checkQuery = "SELECT * FROM users WHERE email="+connection.escape(email);
   var insertQuery = "INSERT INTO users (email, password) VALUES (?, ?)";
 
-  connection.query(insertQuery, [email, password], function(err) {
+  connection.query(checkQuery, function(err, results) {
     if(err) {
       throw err;
     }
 
+    if(results.length > 0) {
+      res.redirect('/?msg=Already exists');
+    }
+    else {
+      connection.query(insertQuery, [email, password], function(err) {
+    if(err) {
+      throw err;
+    }
+  });
     res.redirect('/success');
-  })
+  }
+});
+
+app.post('/login', function(req, res) {
+
 });
 
 app.listen(PORT, function() {
