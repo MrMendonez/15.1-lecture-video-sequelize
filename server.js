@@ -3,12 +3,15 @@ var mysql = require('mysql');
 var expressHandlebars = require('express-handlebars');
 var bodyParser = require('body-parser');
 var session = require('express-session');
+var Sequelize = require('sequelize');
 
-var connection = mysql.createConnection({
-  port: 3306,
-  host: 'localhost',
-  user: 'root',
-  database: 'rcb_authentication_db'
+var sequelize = new Sequelize('rcb_authentication_db', 'root');
+
+var User = sequelize.define('User', {
+  email: {
+    type: Sequelize.STRING
+  },
+  password: Sequelize.STRING
 });
 
 var PORT = process.env.NODE_ENV || 3000;
@@ -28,13 +31,11 @@ app.use(bodyParser.urlencoded({
 app.use(session({
   secret: "elm i 4389rfhifhads",
   cookie: {
-    maxAge: 1000 * 60 * 60 * 24 * 14 // 1000ms (or 1 sec) * 60 sec * 60 min * 24 hrs * 14 days = 2 weeks in milliseconds 
+    maxAge: 1000 * 60 * 60 * 24 * 14 // 1000ms (or 1 sec) * 60 sec * 60 min * 24 hrs * 14 days = 2 weeks in milliseconds
   },
   saveUnitialized: true,
   resave: false
 }));
-
-connection.connect();
 
 app.get('/', function(req, res) {
   res.render('home', {
@@ -73,21 +74,22 @@ app.post('/login', function(req, res) {
   var email = req.body.email;
   var password = req.body.password;
 
-  var checkQuery = "SELECT * FROM users WHERE email = ? AND password = ?";
-
-  connection.query(checkQuery, [email, password], function(err, results) {
-    if(err) {
-      throw err;
+  User.findOne({
+    where: {
+      email: email,
+      password: password
     }
-
-    if(results.length > 0) {
+  }).then(function(user) {
+    if(user) {
       req.session.authenticated = true;
       res.redirect('/success');
     }
     else {
       res.redirect('/?msg=You failed at life');
     }
-  })
+  }).catch(function(err) {
+    throw err
+  });
 }); // end app.post /login
 
 app.get('/success', function(req, res, next) {
@@ -100,6 +102,8 @@ app.get('/success', function(req, res, next) {
   res.send('You got it!');
 });
 
-app.listen(PORT, function() {
-  console.log('Listening on %s ', PORT);
+sequelize.sync().then(function() {
+  app.listen(PORT, function() {
+    console.log('Listening on %s ', PORT);
+  });
 });
