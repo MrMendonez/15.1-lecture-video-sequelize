@@ -2,6 +2,7 @@ var express = require('express');
 var mysql = require('mysql');
 var expressHandlebars = require('express-handlebars');
 var bodyParser = require('body-parser');
+var session = require('express-session');
 
 var connection = mysql.createConnection({
   port: 3306,
@@ -24,10 +25,21 @@ app.use(bodyParser.urlencoded({
   extended: false
 }));
 
-// connection.connect();
+app.use(session({
+  secret: "elm i 4389rfhifhads",
+  cookie: {
+    maxAge: 1000 * 60 * 60 * 24 * 14 // 1000ms (or 1 sec) * 60 sec * 60 min * 24 hrs * 14 days = 2 weeks in milliseconds 
+  },
+  saveUnitialized: true,
+  resave: false
+}));
+
+connection.connect();
 
 app.get('/', function(req, res) {
-  res.render('home');
+  res.render('home', {
+    msg: req.query.msg
+  });
 });
 
 app.post('/register', function(req, res) {
@@ -50,6 +62,7 @@ app.post('/register', function(req, res) {
         if(err) {
           throw err;
         }
+        req.session.authenticated = true;
         res.redirect('/success');
       });
     }
@@ -68,6 +81,7 @@ app.post('/login', function(req, res) {
     }
 
     if(results.length > 0) {
+      req.session.authenticated = true;
       res.redirect('/success');
     }
     else {
@@ -76,7 +90,13 @@ app.post('/login', function(req, res) {
   })
 }); // end app.post /login
 
-app.get('/success', function(req, res) {
+app.get('/success', function(req, res, next) {
+  if(req.session.authenticated === true) {
+    next();
+  }
+  else {
+    res.redirect("/?msg=Must be authed");
+  }
   res.send('You got it!');
 });
 
