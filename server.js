@@ -17,6 +17,11 @@ var User = sequelize.define('User', {
   lastname: Sequelize.STRING
 });
 
+var Person = sequelize.define('User', {
+  firstname: Sequelize.STRING,
+  lastname: Sequelize.STRING
+});
+
 var PORT = process.env.NODE_ENV || 3000;
 
 var app = express();
@@ -47,9 +52,6 @@ app.get('/', function(req, res) {
 });
 
 app.post('/register', function(req, res) {
-  var email = req.body.email;
-  var password = req.body.password;
-
   User.create(req.body).then(function(result) {
     req.session.authenticated = user;
     res.redirect('/success');
@@ -68,7 +70,6 @@ app.post('/login', function(req, res) {
       password: password
     }
   }).then(function(user) {
-    console.log(user);
     if(user) {
       req.session.authenticated = user;
       res.redirect('/success');
@@ -89,6 +90,20 @@ app.get('/success', function(req, res, next) {
     res.redirect("/?msg=Must be authed");
   }
   res.send('Welcome ' + req.session.authenticated.firstname + ' ' + req.session.authenticated.lastname);
+});
+
+app.get('/persons', function(req, res) {
+  Person.findAll().then(function(people) {
+    res.render('person', {
+      people: people
+    })
+  })
+});
+
+app.post('/persons', function(req, res) {
+  Person.create(req.body).then(function() {
+    res.redirect('/persons');
+  });
 });
 
 sequelize.sync().then(function() {
