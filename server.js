@@ -104,7 +104,7 @@ app.post('/persons', function(req, res) {
   Person.create(req.body).then(function() {
     res.redirect('/persons');
   });
-});
+}); // 2:21
 
 sequelize.sync().then(function() {
   app.listen(PORT, function() {
