@@ -17,10 +17,20 @@ var User = sequelize.define('User', {
   lastname: Sequelize.STRING
 });
 
-var Person = sequelize.define('User', {
+var Person = sequelize.define('Person', {
   firstname: Sequelize.STRING,
   lastname: Sequelize.STRING
 });
+
+var AlterEgo = sequelize.define('AlterEgo', {
+  superhero: Sequelize.STRING,
+});
+
+var AlterEgo = sequelize.define('AlterEgo', {
+  superhero: Sequelize.STRING,
+});
+
+Person.hasMany(AlterEgo);
 
 var PORT = process.env.NODE_ENV || 3000;
 
@@ -93,7 +103,11 @@ app.get('/success', function(req, res, next) {
 });
 
 app.get('/persons', function(req, res) {
-  Person.findAll().then(function(people) {
+  Person.findAll({
+    include: [{
+      model: AlterEgo
+    }]
+  }).then(function(people) {
     res.render('person', {
       people: people
     })
@@ -104,7 +118,16 @@ app.post('/persons', function(req, res) {
   Person.create(req.body).then(function() {
     res.redirect('/persons');
   });
-}); // 2:21
+});
+
+app.post('/alteregos/:PersonId', function(req, res) {
+  AlterEgo.create({
+    superhero: req.body.superhero,
+    PersonId: req.params.PersonId
+  }).then(function() {
+    res.redirect('/persons');
+  });
+});
 
 sequelize.sync().then(function() {
   app.listen(PORT, function() {
